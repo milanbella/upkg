@@ -1,0 +1,19 @@
+{
+  "name": "com.mehfruits.upkg",
+  "version": "1.0.0",
+  "displayName": "mehfruits",
+  "description": "This is an mehfruits package",
+  "unity": "2020.3",
+  "dependencies": {
+  },
+ "keywords": [
+    "mehfruits",
+    "mehfruits",
+    "mehfruits"
+  ],
+  "author": {
+    "name": "mehfruits",
+    "email": "meh@mehfruits.com",
+    "url": "https://www.mehfruits.com"
+  }
+}
