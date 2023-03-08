@@ -1,19 +1,19 @@
 {
-  "name": "com.mehfruits.upkg",
+  "name": "com.vmachal.upkg",
   "version": "1.0.0",
-  "displayName": "mehfruits",
-  "description": "This is an mehfruits package",
+  "displayName": "vmachal",
+  "description": "This is an vmachal package",
   "unity": "2020.3",
   "dependencies": {
   },
  "keywords": [
-    "mehfruits",
-    "mehfruits",
-    "mehfruits"
+    "vmachal",
+    "vmachal",
+    "vmachal"
   ],
   "author": {
-    "name": "mehfruits",
-    "email": "meh@mehfruits.com",
-    "url": "https://www.mehfruits.com"
+    "name": "vmachal",
+    "email": "vm@vmachal.com",
+    "url": "https://www.vmachal.com"
   }
 }
