@@ -1,37 +1,211 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Text;
+using System.Web;
+using System.Xml.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class ServerApi : MonoBehaviour {
-    // Start is called before the first frame update
-    void Start() {
-        
-    }
+namespace Vmachal
+{
+    namespace ServerApi
+    {
+        public class Config
+        {
+            public static Config config = new Config("http://localhost:3000/api");
 
-    // Update is called once per frame
-    void Update() {
-        
-    }
+            public readonly string API_URL;
 
-    public void CallApi() {
-        Debug.Log("called ServerApi.CallApi()");
-    }
+            Config(string apiUrl)
+            {
+                this.API_URL = apiUrl;
+            }
 
-    public void CallApiUser() {
-        Debug.Log("called ServerApi.CallApi()");
-        StartCoroutine(this.ApiUser());
-    }
-
-    public IEnumerator ApiUser() {
-        Debug.Log("called ServerApi.CallApi()");
-        UnityWebRequest www = UnityWebRequest.Get("http://localhost:3000/api/user");
-        yield return www.SendWebRequest();
-
-        if (www.result != UnityWebRequest.Result.Success) {
-            Debug.Log(www.error);
-        } else {
-            Debug.Log(www.downloadHandler.text);
         }
+
+        public class HttpGetJsonCall
+        {
+            private static readonly string CLASS_NAME = "HttpGetJsonCall";
+            private string url;
+            private UnityWebRequest wr;
+            private NameValueCollection query;
+
+            public string resultJsonStr;
+
+            HttpGetJsonCall(string url)
+            {
+                this.wr = new UnityWebRequest();
+                this.url = url;
+                this.wr.method = UnityWebRequest.kHttpVerbGET;
+                this.wr.downloadHandler = new DownloadHandlerBuffer();
+
+                this.wr.useHttpContinue = false;
+                this.wr.redirectLimit = 0;  // disable redirects
+                this.wr.timeout = 60;       // don't make this small, web requests do take some time
+
+                this.query = HttpUtility.ParseQueryString(string.Empty);
+            }
+
+            void AddQueryParam(string key, string val)
+            {
+                this.query[key] = val;
+            }
+
+            IEnumerator Call()
+            {
+                string METHOD = "Call()";
+                string url;
+                if (this.query.Count > 0)
+                {
+                    url = $"{this.url}?{this.query.ToString()}";
+                }
+                else
+                {
+                    url = $"{this.url}";
+                }
+                this.wr.url = url;
+
+                yield return this.wr.SendWebRequest();
+
+                if (this.wr.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError($"{HttpGetJsonCall.CLASS_NAME}:{METHOD}: error: {this.wr.error}, url: {url}, status: {this.wr.responseCode}");
+                    throw new Exception($"error: {this.wr.error}, url: {url}, status: {this.wr.responseCode}");
+                }
+                else
+                {
+                    string contenType = this.wr.GetResponseHeader("Content-Type");
+                    if (!contenType.Contains("json"))
+                    {
+                        Debug.LogError($"{HttpGetJsonCall.CLASS_NAME}:{METHOD}: error: response content type is not json, url: {url}");
+                        throw new Exception($"error: response content type is not json, url: {url}");
+
+                    }
+                    this.resultJsonStr = this.wr.downloadHandler.text;
+                }
+
+            }
+
+        }
+
+        public class HttpPostJsonCall
+        {
+            private static readonly string CLASS_NAME = "HttpPostJsonCall";
+            private string url;
+            private UnityWebRequest wr;
+            private NameValueCollection query;
+
+            public string resultJsonStr;
+
+            public HttpPostJsonCall(string url, string requestJsonStr)
+            {
+                this.wr = new UnityWebRequest();
+                this.url = url;
+                this.wr.method = UnityWebRequest.kHttpVerbPOST;
+
+                Byte[] payload = Encoding.UTF8.GetBytes(requestJsonStr);
+                UploadHandler uploadHandler = new UploadHandlerRaw(payload);
+                this.wr.uploadHandler = uploadHandler;
+
+                this.wr.downloadHandler = new DownloadHandlerBuffer();
+
+                this.wr.useHttpContinue = false;
+                this.wr.redirectLimit = 0;  // disable redirects
+                this.wr.timeout = 60;       // don't make this small, web requests do take some time
+
+                this.query = HttpUtility.ParseQueryString(string.Empty);
+            }
+
+            public void AddQueryParam(string key, string val)
+            {
+                this.query[key] = val;
+            }
+
+            public IEnumerator Call()
+            {
+                string METHOD = "Call()";
+                string url;
+                if (this.query.Count > 0)
+                {
+                    url = $"{this.url}?{this.query.ToString()}";
+                }
+                else
+                {
+                    url = $"{this.url}";
+                }
+                this.wr.url = url;
+
+                yield return this.wr.SendWebRequest();
+
+                if (this.wr.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError($"{HttpPostJsonCall.CLASS_NAME}:{METHOD}: error: {this.wr.error}, url: {url}, status: {this.wr.responseCode}");
+                    throw new Exception($"error: {this.wr.error}, url: {url}, status: {this.wr.responseCode}");
+                }
+                else
+                {
+                    string contenType = this.wr.GetResponseHeader("Content-Type");
+                    if (!contenType.Contains("json"))
+                    {
+                        Debug.LogError($"{HttpPostJsonCall.CLASS_NAME}:{METHOD}: error: response content type is not json, url: {url}");
+                        throw new Exception($"error: response content type is not json, url: {url}");
+
+                    }
+                    this.resultJsonStr = this.wr.downloadHandler.text;
+                }
+
+            }
+
+        }
+
+        public class UserApi
+        {
+            private static readonly string API_URL = "http://localhhost:3000/api/user";
+
+            public class UserVerifyPasswordAndIssueJwt
+            {
+                public readonly static string CLASS_NAME = "UserVerifyPasswordAndIssueJwt";
+
+                [Serializable]
+                public class Request
+                {
+                    public string applicationName;
+                    public string deviceId;
+                    public string userName;
+                    public string password;
+                }
+
+                [Serializable]
+                public class Response
+                {
+                    public string username;
+                    public string email;
+                    public string jwt;
+                }
+                public readonly Request request;
+                public Response response;
+
+                public UserVerifyPasswordAndIssueJwt(Request request)
+                {
+                    this.request = request;
+                }
+
+                public IEnumerator Call()
+                {
+                    string requestJsonStr = JsonUtility.ToJson(request);
+                    HttpPostJsonCall http = new HttpPostJsonCall($"{Config.config.API_URL}", requestJsonStr);
+
+                    yield return http.Call();
+
+                    this.response = JsonUtility.FromJson<Response>(http.resultJsonStr);
+
+                }
+
+            }
+
+        }
+
     }
+
 }
