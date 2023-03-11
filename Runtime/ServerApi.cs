@@ -106,7 +106,9 @@ namespace Vmachal
 
                 Byte[] payload = Encoding.UTF8.GetBytes(requestJsonStr);
                 UploadHandler uploadHandler = new UploadHandlerRaw(payload);
+                uploadHandler.contentType = "application/json";
                 this.wr.uploadHandler = uploadHandler;
+                this.wr.SetRequestHeader("Content-Type", "application/json");
 
                 this.wr.downloadHandler = new DownloadHandlerBuffer();
 
@@ -161,7 +163,6 @@ namespace Vmachal
 
         public class UserApi
         {
-            private static readonly string API_URL = "http://localhhost:3000/api/user";
 
             public class UserVerifyPasswordAndIssueJwt
             {
@@ -194,7 +195,7 @@ namespace Vmachal
                 public IEnumerator Call()
                 {
                     string requestJsonStr = JsonUtility.ToJson(request);
-                    HttpPostJsonCall http = new HttpPostJsonCall($"{Config.config.API_URL}", requestJsonStr);
+                    HttpPostJsonCall http = new HttpPostJsonCall($"{Config.config.API_URL}/user/UserVerifyPasswordAndIssueJwt", requestJsonStr);
 
                     yield return http.Call();
 
